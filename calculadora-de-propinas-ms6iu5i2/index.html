@@ -1,0 +1,218 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Propina</title>
+    <style>
+        /* Estilos generales y reseteo básico */
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5; /* Fondo gris claro */
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Contenedor principal de la calculadora */
+        #tip-calculator {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-sizing: border-box; /* Incluye padding y borde en el ancho total */
+        }
+
+        /* Título */
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        /* Grupo de entrada (label + input) */
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .input-group input[type="number"] {
+            width: calc(100% - 20px); /* Ancho total menos padding */
+            padding: 12px 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.1em;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            -moz-appearance: textfield; /* Oculta flechas en Firefox */
+        }
+
+        /* Oculta flechas en Chrome/Safari/Edge */
+        .input-group input[type="number"]::-webkit-outer-spin-button,
+        .input-group input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .input-group input[type="number"]:focus {
+            border-color: #007bff; /* Borde azul al enfocar */
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); /* Sombra azul al enfocar */
+            outline: none; /* Elimina el contorno predeterminado */
+        }
+
+        /* Botón de cálculo */
+        button {
+            background-color: #007bff; /* Azul primario */
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background-color: #0056b3; /* Azul más oscuro al pasar el ratón */
+            transform: translateY(-2px); /* Efecto de elevación */
+        }
+
+        button:active {
+            transform: translateY(0); /* Vuelve a la posición normal al hacer clic */
+        }
+
+        /* Área de resultados */
+        .results {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #eee; /* Separador superior */
+            text-align: left;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between; /* Espacio entre el texto y el valor */
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            color: #555;
+        }
+
+        .result-item span:first-child {
+            font-weight: 500;
+        }
+
+        .result-item span:last-child {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* Estilo especial para el total final */
+        .result-item.total {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #007bff;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px dashed #cfe2ff; /* Borde punteado para el total */
+        }
+
+        .result-item.total span:last-child {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div id="tip-calculator">
+        <h1>Calculadora de Propina</h1>
+
+        <div class="input-group">
+            <label for="billTotal">Total de la Cuenta:</label>
+            <input type="number" id="billTotal" placeholder="Ej: 50.00" min="0" step="0.01" value="50.00">
+        </div>
+
+        <div class="input-group">
+            <label for="tipPercentage">Porcentaje de Propina:</label>
+            <input type="number" id="tipPercentage" placeholder="Ej: 15" min="0" max="100" value="15">
+        </div>
+
+        <button id="calculateBtn">Calcular Propina</button>
+
+        <div class="results">
+            <div class="result-item">
+                <span>Monto de Propina:</span>
+                <span id="tipAmount">$0.00</span>
+            </div>
+            <div class="result-item total">
+                <span>Total Final:</span>
+                <span id="totalBill">$0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const billTotalInput = document.getElementById('billTotal');
+            const tipPercentageInput = document.getElementById('tipPercentage');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const tipAmountSpan = document.getElementById('tipAmount');
+            const totalBillSpan = document.getElementById('totalBill');
+
+            const calculateTip = () => {
+                const billTotal = parseFloat(billTotalInput.value);
+                const tipPercentage = parseFloat(tipPercentageInput.value);
+
+                // Validación de entradas
+                if (isNaN(billTotal) || billTotal < 0) {
+                    tipAmountSpan.textContent = '$0.00';
+                    totalBillSpan.textContent = '$0.00';
+                    // Opcional: mostrar un mensaje de error más amigable en la UI
+                    // alert('Por favor, ingresa un total de cuenta válido y positivo.');
+                    return;
+                }
+
+                if (isNaN(tipPercentage) || tipPercentage < 0 || tipPercentage > 100) {
+                    tipAmountSpan.textContent = '$0.00';
+                    totalBillSpan.textContent = '$0.00';
+                    // Opcional: mostrar un mensaje de error más amigable en la UI
+                    // alert('Por favor, ingresa un porcentaje de propina válido (0-100).');
+                    return;
+                }
+
+                const tipAmount = billTotal * (tipPercentage / 100);
+                const totalBill = billTotal + tipAmount;
+
+                tipAmountSpan.textContent = `$${tipAmount.toFixed(2)}`;
+                totalBillSpan.textContent = `$${totalBill.toFixed(2)}`;
+            };
+
+            // Event listener para el botón
+            calculateBtn.addEventListener('click', calculateTip);
+
+            // Event listeners para recalcular automáticamente al cambiar los inputs
+            billTotalInput.addEventListener('input', calculateTip);
+            tipPercentageInput.addEventListener('input', calculateTip);
+
+            // Realizar un cálculo inicial al cargar la página si los inputs tienen valores predeterminados
+            calculateTip();
+        });
+    </script>
+</body>
+</html>
