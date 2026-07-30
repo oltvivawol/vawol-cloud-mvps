@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas VAWOL</title>
+    <style>
+        /* Basic Reset & Box Sizing */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top, not center vertically */
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            margin-top: 50px; /* Give some space from the top */
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 2.2em;
+        }
+
+        .task-input-group {
+            display: flex;
+            margin-bottom: 25px;
+            gap: 10px; /* Space between input and button */
+        }
+
+        .task-input-group input[type="text"] {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .task-input-group input[type="text"]:focus {
+            border-color: #007bff;
+        }
+
+        .task-input-group button {
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            white-space: nowrap; /* Prevent button text from wrapping */
+        }
+
+        .task-input-group button:hover {
+            background-color: #0056b3;
+        }
+
+        .task-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .task-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border: 1px solid #eee;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .task-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .task-list li.completed {
+            background-color: #e6ffe6; /* Light green for completed */
+            border-color: #c3e6cb;
+        }
+
+        .task-list li.completed .task-text {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        .task-content {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            gap: 10px;
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #007bff; /* Style for the checkbox itself */
+        }
+
+        .task-text {
+            flex-grow: 1;
+            font-size: 1.1em;
+            word-break: break-word; /* Allow long words to break */
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%; /* Make it round */
+            width: 30px;
+            height: 30px;
+            font-size: 0.9em;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s ease;
+            margin-left: 15px; /* Space from task text */
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Tareas</h1>
+        <div class="task-input-group">
+            <input type="text" id="newTaskInput" placeholder="Añadir nueva tarea...">
+            <button id="addTaskBtn">Añadir</button>
+        </div>
+        <ul id="taskList" class="task-list">
+            <!-- Tasks will be added here by JavaScript -->
+        </ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const newTaskInput = document.getElementById('newTaskInput');
+            const addTaskBtn = document.getElementById('addTaskBtn');
+            const taskList = document.getElementById('taskList');
+
+            // Load tasks from localStorage on startup
+            loadTasks();
+
+            function createTaskElement(taskText, isCompleted = false) {
+                const listItem = document.createElement('li');
+                if (isCompleted) {
+                    listItem.classList.add('completed');
+                }
+
+                const taskContent = document.createElement('div');
+                taskContent.classList.add('task-content');
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.classList.add('task-checkbox');
+                checkbox.checked = isCompleted;
+                checkbox.addEventListener('change', () => {
+                    listItem.classList.toggle('completed', checkbox.checked);
+                    saveTasks();
+                });
+
+                const taskSpan = document.createElement('span');
+                taskSpan.classList.add('task-text');
+                taskSpan.textContent = taskText;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.classList.add('delete-btn');
+                deleteBtn.textContent = 'X';
+                deleteBtn.addEventListener('click', () => {
+                    listItem.remove();
+                    saveTasks();
+                });
+
+                taskContent.appendChild(checkbox);
+                taskContent.appendChild(taskSpan);
+                listItem.appendChild(taskContent);
+                listItem.appendChild(deleteBtn);
+
+                return listItem;
+            }
+
+            function addTask() {
+                const taskText = newTaskInput.value.trim();
+                if (taskText === '') {
+                    alert('Por favor, introduce una tarea.');
+                    return;
+                }
+
+                const newTask = createTaskElement(taskText);
+                taskList.appendChild(newTask);
+                newTaskInput.value = ''; // Clear input
+                saveTasks();
+            }
+
+            // Event Listeners
+            addTaskBtn.addEventListener('click', addTask);
+
+            newTaskInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    addTask();
+                }
+            });
+
+            // --- Local Storage Functions ---
+            function saveTasks() {
+                const tasks = [];
+                taskList.querySelectorAll('li').forEach(listItem => {
+                    const taskText = listItem.querySelector('.task-text').textContent;
+                    const isCompleted = listItem.classList.contains('completed');
+                    tasks.push({ text: taskText, completed: isCompleted });
+                });
+                localStorage.setItem('vawol_todo_tasks', JSON.stringify(tasks));
+            }
+
+            function loadTasks() {
+                const storedTasks = localStorage.getItem('vawol_todo_tasks');
+                if (storedTasks) {
+                    const tasks = JSON.parse(storedTasks);
+                    tasks.forEach(task => {
+                        const newTask = createTaskElement(task.text, task.completed);
+                        taskList.appendChild(newTask);
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
