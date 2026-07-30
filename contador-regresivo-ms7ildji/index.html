@@ -1,0 +1,237 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador Regresivo VAWOL</title>
+    <style>
+        /* Estilos CSS embebidos */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 450px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="number"] {
+            width: calc(100% - 24px); /* Account for padding */
+            padding: 12px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1.1em;
+            text-align: center;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            -moz-appearance: textfield; /* Firefox */
+        }
+        /* Hide arrows for Chrome, Safari, Edge */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
+            flex: 1;
+            min-width: 120px; /* Ensure buttons are not too small */
+            max-width: 160px;
+            font-weight: 600;
+        }
+
+        button#startButton {
+            background-color: #28a745;
+            color: white;
+        }
+
+        button#startButton:hover:not(:disabled) {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+
+        button#resetButton {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        button#resetButton:hover:not(:disabled) {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+            transform: none; /* Disable hover effect when disabled */
+        }
+
+        .countdown-display {
+            font-size: 4.5em;
+            font-weight: bold;
+            color: #007bff;
+            min-height: 1.5em; /* Prevent layout shift when content changes */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #e9f5ff;
+            border-radius: 10px;
+            padding: 20px 0;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: color 0.3s ease, background-color 0.3s ease;
+        }
+        .countdown-display.finished {
+            color: #dc3545;
+            background-color: #ffe0e3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contador Regresivo</h1>
+        <div class="input-group">
+            <label for="initialTime">Tiempo inicial (segundos):</label>
+            <input type="number" id="initialTime" value="10" min="1" placeholder="Ej: 60">
+        </div>
+        <div class="button-group">
+            <button id="startButton">Iniciar</button>
+            <button id="resetButton" disabled>Reiniciar</button>
+        </div>
+        <div id="countdownDisplay" class="countdown-display">
+            10
+        </div>
+    </div>
+
+    <script>
+        // JavaScript embebido
+        document.addEventListener('DOMContentLoaded', () => {
+            const initialTimeInput = document.getElementById('initialTime');
+            const startButton = document.getElementById('startButton');
+            const resetButton = document.getElementById('resetButton');
+            const countdownDisplay = document.getElementById('countdownDisplay');
+
+            let countdownInterval = null;
+            let currentCount = 0;
+            let lastValidInitialValue = 10; // Store the last valid input for reset
+
+            // Function to update the display
+            function updateDisplay(value) {
+                countdownDisplay.textContent = value >= 0 ? value : '0';
+                if (value <= 0) {
+                    countdownDisplay.classList.add('finished');
+                } else {
+                    countdownDisplay.classList.remove('finished');
+                }
+            }
+
+            // Function to start the countdown
+            function startCountdown() {
+                clearInterval(countdownInterval); // Clear any existing interval
+
+                let inputVal = parseInt(initialTimeInput.value, 10);
+
+                if (isNaN(inputVal) || inputVal <= 0) {
+                    alert('Por favor, ingresa un número positivo para el tiempo inicial.');
+                    initialTimeInput.value = lastValidInitialValue; // Restore last valid or default
+                    updateDisplay(lastValidInitialValue);
+                    return;
+                }
+
+                lastValidInitialValue = inputVal; // Save this valid input
+                currentCount = inputVal;
+                updateDisplay(currentCount);
+
+                startButton.disabled = true;
+                initialTimeInput.disabled = true;
+                resetButton.disabled = false;
+
+                countdownInterval = setInterval(() => {
+                    currentCount--;
+                    updateDisplay(currentCount);
+
+                    if (currentCount <= 0) {
+                        clearInterval(countdownInterval);
+                        startButton.disabled = false;
+                        initialTimeInput.disabled = false;
+                        countdownDisplay.textContent = '¡Tiempo!';
+                        countdownDisplay.classList.add('finished');
+                    }
+                }, 1000);
+            }
+
+            // Function to reset the countdown
+            function resetCountdown() {
+                clearInterval(countdownInterval);
+                currentCount = 0;
+                initialTimeInput.value = lastValidInitialValue;
+                updateDisplay(lastValidInitialValue);
+                startButton.disabled = false;
+                initialTimeInput.disabled = false;
+                resetButton.disabled = true;
+                countdownDisplay.classList.remove('finished');
+            }
+
+            // Event Listeners
+            startButton.addEventListener('click', startCountdown);
+            resetButton.addEventListener('click', resetCountdown);
+
+            // Initialize display with the default input value
+            updateDisplay(initialTimeInput.value);
+            lastValidInitialValue = parseInt(initialTimeInput.value, 10); // Set initial last valid value
+        });
+    </script>
+</body>
+</html>
